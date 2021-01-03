@@ -22,9 +22,9 @@ X_STEP=20
 NX_STEPS=5
 Z_REST=5
 Z_TOUCH=3
-Z_DRILL=0
+Z_DRILL=1
 
-POSITION_SPEED=8000
+POSITION_SPEED=6000
 DRILL_SPEED=50
 
 function log() {
@@ -66,14 +66,41 @@ function drill_at() {
 	move "G1 Z${Z_REST} F${POSITION_SPEED}"
 }
 
+function make_via_at() {
+	if ! [ -f "$1" ]; then
+		echo "Input via file missing"
+		exit 1
+	fi
+	VIA_FILE="$1"
+	log "Go above the first point of the hole"
+	VIA_START_COMMAND="`tail -n1 ${VIA_FILE}` Z${Z_REST} F${POSITION_SPEED}"
+	move "${VIA_START_COMMAND}"
+	log "Go down to touch the plate"
+	move "G1 Z${Z_TOUCH}"
+	log "Drill the first hole"
+	set_parameter "G1 F${DRILL_SPEED}"
+	move "G1 Z${Z_DRILL}"
+	log "Start drilling"
+	move "`cat ${VIA_FILE}`"
+	log "Go up to rest hight"
+	set_parameter "G1 F${POSITION_SPEED}"
+	move "G1 Z${Z_REST}"
+}
+
 shutdown_motors() {
 	set_parameter "M84 X Y E Z"
 }
 
+# Always home first
+home
 # Drill two holes
-home
-drill_at 20 30
-drill_at 40 30
-home
+
+# drill_at 20 30
+# drill_at 40 30
+# home
+
+make_via_at "gcode-files/via-4mm.gcode-relative"
+
 shutdown_motors
+# Don't forget to kill 
 kill_tail
