@@ -5,6 +5,26 @@ if [ "$PRINTER" = "" ]; then
 	echo '		export PRINTER=/dev/<printer_device>'
 	exit 1
 fi
+if [ "$Z_REST" = "" ]; then
+	echo 'Please set Z_REST'
+	exit 1
+fi
+if [ "$Z_TOUCH" = "" ]; then
+	echo 'Please set Z_TOUCH'
+	exit 1
+fi
+if [ "$Z_DRILL" = "" ]; then
+	echo 'Please set Z_DRILL'
+	exit 1
+fi
+if [ "$DRILL_SPEED" = "" ]; then
+	echo 'Please set DRILL_SPEED'
+	exit 1
+fi
+if [ "$POSITION_SPEED" = "" ]; then
+	echo 'Please set POSITION_SPEED'
+	exit 1
+fi
 
 LOG_FILE="status.log"
 function kill_tail() {
@@ -16,37 +36,30 @@ kill_tail
 rm $LOG_FILE
 tail -f $PRINTER >> $LOG_FILE &
 
-X_START=20
-Y_START=100
-X_STEP=20
-NX_STEPS=5
-Z_REST=5
-Z_TOUCH=3
-Z_DRILL=1
-
-POSITION_SPEED=6000
-DRILL_SPEED=50
-
 function log() {
-	echo "================ $1 ================" >> $LOG_FILE
+	echo "================ $1 ================" # >> $LOG_FILE
 }
 
 function set_parameter() {
 	echo "$1" > $PRINTER
+	sleep 0.2
+	echo "$1"
 }
 
 function move() {
-	# read -r -t3 output <&3
-	echo "$1" > $PRINTER
-	echo "Waiting for status change..." >> $LOG_FILE
-	# If we don't wait a bit, the state might be the previous "ok"
-	sleep 2
-	log_out=`tail -n1 "$LOG_FILE" | grep "^ok"`
-	while [ "$log_out" = "" ]; do
-		log_out=`tail -n1 $LOG_FILE | grep "^ok"`
-		sleep 0.2
+	COMMAND="$1"
+	printf '%s\n' "$COMMAND" | while IFS= read -r line; do
+		echo "$line" > $PRINTER
+		echo "$line"
+		echo "Waiting for status change..." >> $LOG_FILE
+		# If we don't wait a bit, the state might be the previous "ok"
+		sleep 2
+		log_out=`tail -n1 "$LOG_FILE" | grep "^ok"`
+		while [ "$log_out" = "" ]; do
+			log_out=`tail -n1 $LOG_FILE | grep "^ok"`
+			sleep 0.2
+		done
 	done
-	# kill_tail
 }
 
 function home() {
@@ -72,8 +85,10 @@ function make_via_at() {
 		exit 1
 	fi
 	VIA_FILE="$1"
+	log "Go up not to scratch"
+	move "G1 Z${Z_REST}"
 	log "Go above the first point of the hole"
-	VIA_START_COMMAND="`tail -n1 ${VIA_FILE}` Z${Z_REST} F${POSITION_SPEED}"
+	VIA_START_COMMAND="`head -n1 ${VIA_FILE}` Z${Z_REST} F${POSITION_SPEED}"
 	move "${VIA_START_COMMAND}"
 	log "Go down to touch the plate"
 	move "G1 Z${Z_TOUCH}"
@@ -87,20 +102,6 @@ function make_via_at() {
 	move "G1 Z${Z_REST}"
 }
 
-shutdown_motors() {
+function shutdown_motors() {
 	set_parameter "M84 X Y E Z"
 }
-
-# Always home first
-home
-# Drill two holes
-
-# drill_at 20 30
-# drill_at 40 30
-# home
-
-make_via_at "gcode-files/via-4mm.gcode-relative"
-
-shutdown_motors
-# Don't forget to kill 
-kill_tail

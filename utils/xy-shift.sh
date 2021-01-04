@@ -23,8 +23,8 @@ fi
 OUT_FILE="${IN_FILE}-relative"
 TMP_FILE="${IN_FILE}-tmp"
 
+rm $OUT_FILE
 touch $OUT_FILE
-echo "; New coordinates: X=$2, Y=$3" > $OUT_FILE
 cat $IN_FILE >> $OUT_FILE
 cp $OUT_FILE $TMP_FILE
 
@@ -37,7 +37,6 @@ ABS="`cat $IN_FILE | sed 's/.*X//' | sed 's/\..*//' | sed 's/ .*//g' | sort | un
 		else
 			REL=$((VAL-110+$3))
 		fi
-		echo "Replacing $VAL with $REL for $COORD"
 		cat $TMP_FILE | sed "s/${COORD}${VAL}/${COORD}${REL}/g" > $OUT_FILE
 		cp $OUT_FILE $TMP_FILE
 	done
