@@ -1,6 +1,8 @@
 use std::io::Write;
 mod cnc_error;
 mod cnc_commands;
+mod cnc_geometry;
+mod cnc_settings;
 
 fn get_string(port: &mut std::boxed::Box<dyn serialport::SerialPort>) -> String {
     let mut serial_buf: Vec<u8> = vec![0; 32];
