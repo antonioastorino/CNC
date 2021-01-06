@@ -2,9 +2,9 @@ struct Constants {}
 impl Constants {
 	const MOVE_SPEED: f32 = 6000.0;
 	const MILL_SPEED: f32 = 3000.0;
-	const MOVE_HEIGHT: f32 = 10.0;
-	const TOUCH_HEIGHT: f32 = 7.0;
-	const MILL_HEIGHT: f32 = 6.1;
+	const MOVE_HEIGHT: f32 = 20.0;
+	const TOUCH_HEIGHT: f32 = 17.0;
+	const MILL_HEIGHT: f32 = 16.1;
 	const MIN_X: f32 = 10.0;
 	const MIN_Y: f32 = 10.0;
 	const MIN_Z: f32 = 0.01;
